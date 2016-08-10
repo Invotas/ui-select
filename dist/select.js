@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.18.1 - 2016-08-02T16:11:51.924Z
+ * Version: 0.19.1 - 2016-08-09T18:13:19.300Z
  * License: MIT
  */
 
@@ -112,6 +112,7 @@ var uis = angular.module('ui.select', [])
   skipFocusser: false,
   dropdownPosition: 'auto',
   removeSelected: true,
+  resetSearchInput: false,
   generateId: function() {
     return latestId++;
   },
@@ -172,31 +173,6 @@ var uis = angular.module('ui.select', [])
       height: boundingClientRect.height || element.prop('offsetHeight'),
       top: boundingClientRect.top + ($window.pageYOffset || $document[0].documentElement.scrollTop),
       left: boundingClientRect.left + ($window.pageXOffset || $document[0].documentElement.scrollLeft)
-    };
-  };
-}]);
-
-/**
- * Debounces functions
- *
- * Taken from UI Bootstrap $$debounce source code
- * See https://github.com/angular-ui/bootstrap/blob/master/src/debounce/debounce.js
- *
- */
-uis.factory('$$uisDebounce', ['$timeout', function($timeout) {
-  return function(callback, debounceTime) {
-    var timeoutPromise;
-
-    return function() {
-      var self = this;
-      var args = Array.prototype.slice.call(arguments);
-      if (timeoutPromise) {
-        $timeout.cancel(timeoutPromise);
-      }
-
-      timeoutPromise = $timeout(function() {
-        callback.apply(self, args);
-      }, debounceTime);
     };
   };
 }]);
@@ -307,6 +283,7 @@ uis.controller('uiSelectCtrl',
   ctrl.sortable = uiSelectConfig.sortable;
   ctrl.refreshDelay = uiSelectConfig.refreshDelay;
   ctrl.paste = uiSelectConfig.paste;
+  ctrl.resetSearchInput = uiSelectConfig.resetSearchInput;
 
   ctrl.removeSelected = uiSelectConfig.removeSelected; //If selected item(s) should be removed from dropdown list
   ctrl.closeOnSelect = true; //Initialized inside uiSelect directive link function
@@ -324,7 +301,6 @@ uis.controller('uiSelectCtrl',
   ctrl.dropdownPosition = 'auto';
 
   ctrl.focusser = undefined; //Reference to input element used to handle focus events
-  ctrl.resetSearchInput = true;
   ctrl.multiple = undefined; // Initialized inside uiSelect directive link function
   ctrl.disableChoiceExpression = undefined; // Initialized inside uiSelectChoices directive link function
   ctrl.tagging = {isActivated: false, fct: undefined};
@@ -373,7 +349,7 @@ uis.controller('uiSelectCtrl',
 
   // Most of the time the user does not want to empty the search input when in typeahead mode
   function _resetSearchInput() {
-    if (ctrl.resetSearchInput || (ctrl.resetSearchInput === undefined && uiSelectConfig.resetSearchInput)) {
+    if (ctrl.resetSearchInput) {
       ctrl.search = EMPTY_SEARCH;
       //reset activeIndex
       if (ctrl.selected && ctrl.items.length && !ctrl.multiple) {
@@ -713,6 +689,7 @@ uis.controller('uiSelectCtrl',
             ctrl.close(skipFocusser);
             return;
           }
+          _resetSearchInput();
         }
 
         $scope.$broadcast('uis:select', item);
@@ -738,7 +715,6 @@ uis.controller('uiSelectCtrl',
   ctrl.close = function(skipFocusser) {
     if (!ctrl.open) return;
     if (ctrl.ngModel && ctrl.ngModel.$setTouched) ctrl.ngModel.$setTouched();
-    _resetSearchInput();
     ctrl.open = false;
 
     $scope.$broadcast('uis:close', skipFocusser);
@@ -2230,6 +2206,31 @@ uis.directive('uiSelectSort', ['$timeout', 'uiSelectConfig', 'uiSelectMinErr', f
         element.off('drop', dropHandler);
       });
     }
+  };
+}]);
+
+/**
+ * Debounces functions
+ *
+ * Taken from UI Bootstrap $$debounce source code
+ * See https://github.com/angular-ui/bootstrap/blob/master/src/debounce/debounce.js
+ *
+ */
+uis.factory('$$uisDebounce', ['$timeout', function($timeout) {
+  return function(callback, debounceTime) {
+    var timeoutPromise;
+
+    return function() {
+      var self = this;
+      var args = Array.prototype.slice.call(arguments);
+      if (timeoutPromise) {
+        $timeout.cancel(timeoutPromise);
+      }
+
+      timeoutPromise = $timeout(function() {
+        callback.apply(self, args);
+      }, debounceTime);
+    };
   };
 }]);
 
