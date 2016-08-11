@@ -1,7 +1,7 @@
 /*!
  * ui-select
  * http://github.com/angular-ui/ui-select
- * Version: 0.19.1 - 2016-08-09T18:13:19.300Z
+ * Version: 0.19.2 - 2016-08-11T13:10:02.954Z
  * License: MIT
  */
 
@@ -173,6 +173,31 @@ var uis = angular.module('ui.select', [])
       height: boundingClientRect.height || element.prop('offsetHeight'),
       top: boundingClientRect.top + ($window.pageYOffset || $document[0].documentElement.scrollTop),
       left: boundingClientRect.left + ($window.pageXOffset || $document[0].documentElement.scrollLeft)
+    };
+  };
+}]);
+
+/**
+ * Debounces functions
+ *
+ * Taken from UI Bootstrap $$debounce source code
+ * See https://github.com/angular-ui/bootstrap/blob/master/src/debounce/debounce.js
+ *
+ */
+uis.factory('$$uisDebounce', ['$timeout', function($timeout) {
+  return function(callback, debounceTime) {
+    var timeoutPromise;
+
+    return function() {
+      var self = this;
+      var args = Array.prototype.slice.call(arguments);
+      if (timeoutPromise) {
+        $timeout.cancel(timeoutPromise);
+      }
+
+      timeoutPromise = $timeout(function() {
+        callback.apply(self, args);
+      }, debounceTime);
     };
   };
 }]);
@@ -689,8 +714,9 @@ uis.controller('uiSelectCtrl',
             ctrl.close(skipFocusser);
             return;
           }
-          _resetSearchInput();
         }
+
+        _resetSearchInput();
 
         $scope.$broadcast('uis:select', item);
 
@@ -717,6 +743,7 @@ uis.controller('uiSelectCtrl',
     if (ctrl.ngModel && ctrl.ngModel.$setTouched) ctrl.ngModel.$setTouched();
     ctrl.open = false;
 
+    _resetSearchInput();
     $scope.$broadcast('uis:close', skipFocusser);
 
   };
@@ -2206,31 +2233,6 @@ uis.directive('uiSelectSort', ['$timeout', 'uiSelectConfig', 'uiSelectMinErr', f
         element.off('drop', dropHandler);
       });
     }
-  };
-}]);
-
-/**
- * Debounces functions
- *
- * Taken from UI Bootstrap $$debounce source code
- * See https://github.com/angular-ui/bootstrap/blob/master/src/debounce/debounce.js
- *
- */
-uis.factory('$$uisDebounce', ['$timeout', function($timeout) {
-  return function(callback, debounceTime) {
-    var timeoutPromise;
-
-    return function() {
-      var self = this;
-      var args = Array.prototype.slice.call(arguments);
-      if (timeoutPromise) {
-        $timeout.cancel(timeoutPromise);
-      }
-
-      timeoutPromise = $timeout(function() {
-        callback.apply(self, args);
-      }, debounceTime);
-    };
   };
 }]);
 
